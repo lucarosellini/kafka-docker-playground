@@ -43,7 +43,7 @@ services:
     environment:
         ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         #ENSURE_NAMENODE_CLUSTERID: "sh"
-        SLEEP_SECONDS: 40
+        SLEEP_SECONDS: 60
         #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "namenode"]
     volumes:
@@ -59,8 +59,8 @@ services:
       - krb5
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
-    environment:
-        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    #environment:
+        #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -75,8 +75,8 @@ services:
       - krb5
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
-    environment:
-        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    #environment:
+        #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -92,8 +92,8 @@ services:
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
     command: ["hdfs", "journalnode"]
-    environment:
-         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    #environment:
+         #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
@@ -110,7 +110,7 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
     environment:
         SLEEP_SECONDS: 50
-        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
@@ -157,7 +157,8 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      KAFKA_OPTS: -Dsun.security.krb5.debug=false
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
 
   connect2:
     build:
@@ -171,7 +172,8 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      KAFKA_OPTS: -Dsun.security.krb5.debug=false
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
 
   connect3:
     build:
@@ -185,7 +187,8 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      KAFKA_OPTS: -Dsun.security.krb5.debug=false
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
 
 networks:
   default:

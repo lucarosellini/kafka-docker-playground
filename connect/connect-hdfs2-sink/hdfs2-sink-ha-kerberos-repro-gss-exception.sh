@@ -20,8 +20,8 @@ set -e
 
 #export TAG=5.4.2-1-ubi8
 export CONNECTOR_TAG=10.1.0
-NB_CONNECTORS=40    
-NB_TASK_PER_CONNECTOR=10
+NB_CONNECTORS=10
+NB_TASK_PER_CONNECTOR=5
 CONNECT_KERBEROS_TICKET_LIFETIME=5
 HADOOP_VERSION=3.1.1
 
@@ -40,9 +40,12 @@ function wait_for_gss_exception () {
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-     while egrep "Failed\s+to\s+find\s+any\s+Kerberos\s+tgt" /tmp/out.txt > /dev/null;
+     until grep "GSSException" /tmp/out.txt;
      do
+          log "Sleeping 10 seconds."
           sleep 10
+          
+          log "Collecting logs from kafka connect"
           docker container logs connect > /tmp/out.txt 2>&1
           docker container logs connect2 >> /tmp/out.txt 2>&1
           docker container logs connect3 >> /tmp/out.txt 2>&1
@@ -54,7 +57,9 @@ function wait_for_gss_exception () {
 
           for((i=0;i<$NB_CONNECTORS;i++)); do
                # send requests
+               log "Sending requests ... "
                seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+               log " ... requests sent."
           done
      done
      log "The problem has been reproduced !"
@@ -68,6 +73,10 @@ fi
 
 export ENABLE_CONNECT_NODES=1
 
+#wait_for_gss_exception
+#exit 0
+
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-ha-gss-exception.yml"
 
 log "Java version used on connect:"
@@ -76,53 +85,53 @@ docker exec -i connect java -version
 log "Wait 120 seconds while hadoop is installing"
 sleep 120
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8283/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8283/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8283/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8283/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8383/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8383/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8383/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8383/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
@@ -192,9 +201,10 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "schema.compatibility":"BACKWARD"
                }' \
           http://localhost:8083/connectors/hdfs-sink-kerberos$i/config | jq .
+     sleep 1
 done
 
-wait_for_gss_exception
+#wait_for_gss_exception
 
 exit 0
 
