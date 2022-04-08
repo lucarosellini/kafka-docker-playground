@@ -19,13 +19,14 @@ set -e
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
 #export TAG=5.4.2-1-ubi8
-export CONNECTOR_TAG=10.1.0
+#export CONNECTOR_TAG=10.1.5_tws
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+export CONNECTOR_ZIP=${DIR}/ha-kerberos-repro-gss-exception/confluentinc-kafka-connect-hdfs-10.1.5tws.zip
 NB_CONNECTORS=40    
 NB_TASK_PER_CONNECTOR=10
 CONNECT_KERBEROS_TICKET_LIFETIME=5
 HADOOP_VERSION=3.1.1
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/ha-kerberos-repro-gss-exception/jdk-8u201-linux-x64.rpm ]
@@ -40,8 +41,9 @@ function wait_for_gss_exception () {
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-     while egrep "Failed\s+to\s+find\s+any\s+Kerberos\s+tgt" /tmp/out.txt > /dev/null;
+     while grep "GSSException" /tmp/out.txt > /dev/null;
      do
+          log "Sleeping 10 seconds."
           sleep 10
           docker container logs connect > /tmp/out.txt 2>&1
           docker container logs connect2 >> /tmp/out.txt 2>&1

@@ -82,3 +82,4 @@ myenv
 *.log
 secrets.properties
 secrets.tar
+*.zip
