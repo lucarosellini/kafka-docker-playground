@@ -123,7 +123,7 @@ services:
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
       CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
-      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
@@ -191,7 +191,7 @@ services:
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
       CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
-      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
@@ -259,7 +259,7 @@ services:
       # Externalizing Secrets
       CONNECT_CONFIG_PROVIDERS: 'file'
       CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
-      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
