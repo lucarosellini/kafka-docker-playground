@@ -21,8 +21,8 @@ set -e
 #export TAG=5.4.2-1-ubi8
 #export CONNECTOR_TAG=10.1.5_tws
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-export CONNECTOR_ZIP=${DIR}/ha-kerberos-repro-gss-exception/confluentinc-kafka-connect-hdfs-10.1.5tws.zip
-NB_CONNECTORS=40    
+export CONNECTOR_ZIP=${DIR}/ha-kerberos-repro-gss-exception/confluentinc-kafka-connect-hdfs-10.1.5notgt.zip
+NB_CONNECTORS=40
 NB_TASK_PER_CONNECTOR=10
 CONNECT_KERBEROS_TICKET_LIFETIME=5
 HADOOP_VERSION=3.1.1
@@ -40,24 +40,33 @@ function wait_for_gss_exception () {
      MAX_WAIT=1200
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
-     docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-     while grep "GSSException" /tmp/out.txt > /dev/null;
+     
+     docker container logs connect > /tmp/out.txt 2>&1
+     docker container logs connect2 >> /tmp/out.txt 2>&1
+     docker container logs connect3 >> /tmp/out.txt 2>&1
+
+     cat /tmp/out.txt > /tmp/starting.log
+
+     until grep "GSSException" /tmp/out.txt;
      do
-          log "Sleeping 10 seconds."
           sleep 10
+          
           docker container logs connect > /tmp/out.txt 2>&1
           docker container logs connect2 >> /tmp/out.txt 2>&1
           docker container logs connect3 >> /tmp/out.txt 2>&1
           CUR_WAIT=$(( CUR_WAIT+10 ))
+          
           if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
                echo -e "\nERROR: The logs in all connect containers do not show 'Failed to find any Kerberos tgt' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
                exit 1
           fi
 
+          log "Sending requests to all ${NB_CONNECTORS} ... "
           for((i=0;i<$NB_CONNECTORS;i++)); do
                # send requests
                seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
           done
+          log "Requests sent"
      done
      log "The problem has been reproduced !"
 }
@@ -70,6 +79,10 @@ fi
 
 export ENABLE_CONNECT_NODES=1
 
+#wait_for_gss_exception
+#exit 0
+
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-ha-gss-exception.yml"
 
 log "Java version used on connect:"
@@ -78,53 +91,53 @@ docker exec -i connect java -version
 log "Wait 120 seconds while hadoop is installing"
 sleep 120
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8283/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8283/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8283/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8283/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8383/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8383/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8383/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8383/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
@@ -147,6 +160,7 @@ docker cp connect.keytab connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
+     docker exec -u appuser connect kinit -V -kt /tmp/connect.keytab connect@EXAMPLE.COM
 fi
 
 log "Copy connect.keytab to connect2 container"
@@ -154,6 +168,7 @@ docker cp connect.keytab connect2:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect2 chown appuser:appuser /tmp/connect.keytab
+     docker exec -u appuser connect2 kinit -V -kt /tmp/connect.keytab connect@EXAMPLE.COM
 fi
 
 log "Copy connect.keytab to connect3 container"
@@ -161,6 +176,7 @@ docker cp connect.keytab connect3:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect3 chown appuser:appuser /tmp/connect.keytab
+     docker exec -u appuser connect3 kinit -V -kt /tmp/connect.keytab connect@EXAMPLE.COM
 fi
 
 for((i=0;i<$NB_CONNECTORS;i++)); do
@@ -194,6 +210,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "schema.compatibility":"BACKWARD"
                }' \
           http://localhost:8083/connectors/hdfs-sink-kerberos$i/config | jq .
+     sleep 1
 done
 
 wait_for_gss_exception

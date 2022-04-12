@@ -2,7 +2,7 @@ ARG TAG
 ARG CONNECTOR_TAG
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 COPY jdk-8u201-linux-x64.rpm /tmp/
-COPY confluentinc-kafka-connect-hdfs-10.1.5tws.zip /tmp/
+COPY confluentinc-kafka-connect-hdfs-10.1.5notgt.zip /tmp/
 USER root
 # with 6.2.0
 RUN microdnf install yum \
@@ -14,7 +14,7 @@ RUN microdnf install yum \
 #     && rm -f /tmp/jdk-8u201-linux-x64.rpm && alternatives --remove java /usr/lib/jvm/zulu8/jre/bin/java
 USER appuser
 ARG CONNECTOR_TAG
-RUN confluent-hub install --no-prompt /tmp/confluentinc-kafka-connect-hdfs-10.1.5tws.zip
+RUN confluent-hub install --no-prompt /tmp/confluentinc-kafka-connect-hdfs-10.1.5notgt.zip
 # https://stackoverflow.com/a/41548434/2381999
 # WORKDIR /
 # RUN yum -y install gcc automake autoconf libtool make git && git clone https://github.com/wolfcw/libfaketime.git
